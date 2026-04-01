@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="دوائي">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>دوائي — تذكير الدواء</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d1117;
+  --bg2: #161b22;
+  --bg3: #1c2128;
+  --bg4: #21262d;
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.14);
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --text3: #484f58;
+  --green: #2ea043;
+  --green-light: #56d364;
+  --green-bg: rgba(46,160,67,0.15);
+  --green-border: rgba(46,160,67,0.3);
+  --amber: #d29922;
+  --amber-light: #f0b429;
+  --amber-bg: rgba(210,153,34,0.15);
+  --amber-border: rgba(210,153,34,0.3);
+  --red: #da3633;
+  --red-light: #f85149;
+  --red-bg: rgba(218,54,51,0.15);
+  --red-border: rgba(218,54,51,0.3);
+  --blue: #1f6feb;
+  --blue-bg: rgba(31,111,235,0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-pill: 20px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; background: var(--bg); }
+body { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; color: var(--text); font-size: 15px; }
+
+/* LAYOUT */
+#app { height: 100dvh; display: flex; flex-direction: column; }
+.screen { display: none; flex-direction: column; height: 100%; }
+.screen.active { display: flex; }
+
+/* NAV BAR */
+.nav { display: flex; background: var(--bg2); border-top: 1px solid var(--border); padding: 8px 0 calc(8px + var(--safe-bottom)); flex-shrink: 0; }
+.nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; border: none; background: transparent; color: var(--text3); cursor: pointer; padding: 4px 0; transition: color 0.15s; }
+.nav-btn.active { color: var(--green-light); }
+.nav-btn svg { width: 22px; height: 22px; }
+.nav-btn span { font-size: 10px; font-family: inherit; }
+
+/* SCROLL AREA */
+.scroll { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+.scroll::-webkit-scrollbar { display: none; }
+.inner { padding: 0 16px 24px; }
+
+/* STATUS BAR SPACER */
+.status-bar { height: calc(var(--safe-top) + 12px); flex-shrink: 0; }
+
+/* HEADER */
+.page-header { padding: 16px 0 12px; }
+.page-header h1 { font-size: 22px; font-weight: 600; color: var(--text); }
+.page-header p { font-size: 13px; color: var(--text2); margin-top: 2px; }
+
+/* CARDS */
+.card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; }
+.card-label { font-size: 11px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+
+/* STATS */
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.stat { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }
+.stat-num { font-size: 28px; font-weight: 600; color: var(--text); line-height: 1; }
+.stat-lbl { font-size: 12px; color: var(--text2); margin-top: 4px; }
+
+/* PROGRESS */
+.prog-wrap { margin: 10px 0 6px; }
+.prog-track { height: 4px; background: var(--bg4); border-radius: 2px; overflow: hidden; }
+.prog-fill { height: 100%; background: var(--green); border-radius: 2px; transition: width 0.5s ease; }
+.prog-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text2); margin-top: 5px; }
+
+/* MED ITEMS */
+.med-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.med-row:last-child { border-bottom: none; padding-bottom: 0; }
+.med-ic { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.med-body { flex: 1; min-width: 0; }
+.med-title { font-size: 14px; font-weight: 500; color: var(--text); }
+.med-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.med-sub.late { color: var(--red-light); }
+.pill-check { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid var(--border2); background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: all 0.2s; }
+.pill-check.done { background: var(--green); border-color: var(--green); }
+.pill-check svg { width: 14px; height: 14px; stroke: transparent; transition: stroke 0.2s; }
+.pill-check.done svg { stroke: white; }
+
+/* ALERT BANNERS */
+.alert { display: flex; align-items: flex-start; gap: 10px; padding: 12px; border-radius: var(--radius-sm); margin-bottom: 8px; }
+.alert-warn { background: var(--amber-bg); border: 1px solid var(--amber-border); }
+.alert-danger { background: var(--red-bg); border: 1px solid var(--red-border); }
+.alert-info { background: var(--green-bg); border: 1px solid var(--green-border); }
+.alert-ic { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.alert-body { flex: 1; }
+.alert-title { font-size: 13px; font-weight: 500; }
+.alert-warn .alert-title { color: var(--amber-light); }
+.alert-danger .alert-title { color: var(--red-light); }
+.alert-info .alert-title { color: var(--green-light); }
+.alert-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+/* NOTIF PERMISSION BANNER */
+.notif-bar { display: flex; align-items: center; gap: 12px; background: var(--blue-bg); border: 1px solid rgba(31,111,235,0.3); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 12px; }
+.notif-bar-text { flex: 1; font-size: 13px; color: var(--text); }
+.notif-bar-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.notif-bar-btn { height: 32px; padding: 0 14px; background: var(--blue); color: white; border: none; border-radius: var(--radius-sm); font-size: 12px; font-family: inherit; cursor: pointer; white-space: nowrap; }
+
+/* STOCK */
+.stock-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 10px; }
+.stock-card.warn { border-color: var(--amber-border); }
+.stock-card.crit { border-color: var(--red-border); }
+.stock-top { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.stock-ic { width: 38px; height: 38px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+.stock-info { flex: 1; }
+.stock-name { font-size: 14px; font-weight: 500; color: var(--text); }
+.stock-meta { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.stock-badge { font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: var(--radius-pill); flex-shrink: 0; }
+.badge-ok { background: var(--green-bg); color: var(--green-light); border: 1px solid var(--green-border); }
+.badge-warn { background: var(--amber-bg); color: var(--amber-light); border: 1px solid var(--amber-border); }
+.badge-crit { background: var(--red-bg); color: var(--red-light); border: 1px solid var(--red-border); }
+.stock-bar-track { height: 6px; background: var(--bg4); border-radius: 3px; overflow: hidden; margin-bottom: 6px; }
+.stock-bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+.stock-nums { display: flex; justify-content: space-between; font-size: 11px; color: var(--text2); }
+.stock-warn-msg { font-size: 12px; padding: 8px 10px; border-radius: var(--radius-sm); margin-top: 10px; }
+.stock-warn-msg.w { background: var(--amber-bg); color: var(--amber-light); }
+.stock-warn-msg.c { background: var(--red-bg); color: var(--red-light); }
+.stock-actions { display: flex; gap: 8px; margin-top: 10px; }
+.btn-outline { flex: 1; height: 34px; border: 1px solid var(--border2); border-radius: var(--radius-sm); background: transparent; color: var(--text2); font-size: 12px; font-family: inherit; cursor: pointer; }
+.btn-outline:hover { background: var(--bg3); }
+.btn-green { border-color: var(--green-border); color: var(--green-light); }
+.btn-green:hover { background: var(--green-bg); }
+.refill-row { display: none; align-items: center; gap: 8px; margin-top: 10px; }
+.refill-row.open { display: flex; }
+.refill-row input { flex: 1; height: 34px; background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius-sm); color: var(--text); font-size: 13px; padding: 0 10px; font-family: inherit; }
+.refill-row input:focus { outline: none; border-color: var(--green); }
+.refill-row button { height: 34px; padding: 0 14px; background: var(--green); color: white; border: none; border-radius: var(--radius-sm); font-size: 13px; font-family: inherit; cursor: pointer; }
+
+/* CALENDAR */
+.cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.cal-title { font-size: 15px; font-weight: 500; }
+.cal-nav-btn { width: 32px; height: 32px; border: 1px solid var(--border2); border-radius: var(--radius-sm); background: transparent; color: var(--text2); cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+.summary3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 14px; }
+.s3 { background: var(--bg3); border-radius: var(--radius-sm); padding: 10px 8px; text-align: center; }
+.s3-num { font-size: 22px; font-weight: 600; }
+.s3-lbl { font-size: 10px; color: var(--text2); margin-top: 2px; }
+.cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; }
+.cal-dh { text-align: center; font-size: 10px; color: var(--text3); padding: 4px 0; }
+.cal-d { aspect-ratio: 1; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+.cal-d.perfect { background: #1a4a2e; color: #56d364; }
+.cal-d.partial { background: #3d2e0a; color: #f0b429; }
+.cal-d.missed { background: #3d0f0e; color: #f85149; }
+.cal-d.future { background: var(--bg3); color: var(--text3); }
+.cal-d.today-ring { outline: 2px solid var(--green); outline-offset: 1px; }
+.legend { display: flex; gap: 12px; justify-content: center; margin-top: 10px; flex-wrap: wrap; }
+.leg { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text2); }
+.leg-dot { width: 9px; height: 9px; border-radius: 2px; }
+.adh-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.adh-name { font-size: 12px; color: var(--text2); width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; }
+.adh-track { flex: 1; height: 4px; background: var(--bg4); border-radius: 2px; overflow: hidden; }
+.adh-fill { height: 100%; border-radius: 2px; }
+.adh-pct { font-size: 11px; color: var(--text2); width: 34px; text-align: left; flex-shrink: 0; }
+.issue-row { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.issue-row:last-child { border-bottom: none; }
+.issue-ic { width: 28px; height: 28px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+
+/* NOTIFICATIONS */
+.notif-status-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 5px 12px; border-radius: var(--radius-pill); font-weight: 500; }
+.chip-ok { background: var(--green-bg); color: var(--green-light); border: 1px solid var(--green-border); }
+.chip-off { background: var(--red-bg); color: var(--red-light); border: 1px solid var(--red-border); }
+.chip-pending { background: var(--amber-bg); color: var(--amber-light); border: 1px solid var(--amber-border); }
+.toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.toggle-row:last-child { border-bottom: none; }
+.toggle-lbl { font-size: 14px; color: var(--text); }
+.toggle-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.tog { width: 44px; height: 24px; border-radius: 12px; background: var(--bg4); border: none; cursor: pointer; position: relative; transition: background 0.2s; flex-shrink: 0; }
+.tog.on { background: var(--green); }
+.tog::after { content:''; position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border-radius: 50%; background: white; transition: right 0.2s; }
+.tog.on::after { right: 23px; }
+.sched-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+.sched-row:last-child { border-bottom: none; }
+.sched-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.sched-dot.pending { background: var(--amber); }
+.sched-dot.sent { background: var(--green); }
+.sched-dot.late { background: var(--red); }
+.sched-t { font-weight: 500; min-width: 42px; color: var(--text); }
+.sched-name { flex: 1; color: var(--text2); }
+.sched-status { font-size: 10px; }
+.sched-status.pending { color: var(--amber-light); }
+.sched-status.sent { color: var(--green-light); }
+.sched-status.late { color: var(--red-light); }
+.test-notif-btn { width: 100%; height: 42px; margin-top: 12px; border: 1px solid var(--green-border); border-radius: var(--radius); background: var(--green-bg); color: var(--green-light); font-size: 14px; font-family: inherit; cursor: pointer; }
+.test-notif-btn:active { opacity: 0.75; }
+
+/* ADD FORM */
+.form-field { margin-bottom: 12px; }
+.form-label { font-size: 12px; color: var(--text2); margin-bottom: 6px; display: block; font-weight: 500; }
+.form-input { width: 100%; height: 44px; background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius-sm); color: var(--text); font-size: 14px; padding: 0 12px; font-family: inherit; }
+.form-input:focus { outline: none; border-color: var(--green); }
+.form-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-select { width: 100%; height: 44px; background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius-sm); color: var(--text); font-size: 14px; padding: 0 12px; font-family: inherit; appearance: none; }
+.form-select:focus { outline: none; border-color: var(--green); }
+.add-submit { width: 100%; height: 48px; background: var(--green); color: white; border: none; border-radius: var(--radius); font-size: 15px; font-weight: 500; font-family: inherit; cursor: pointer; margin-top: 4px; }
+.add-submit:active { opacity: 0.85; }
+.manage-row { display: flex; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--border); }
+.manage-row:last-child { border-bottom: none; }
+.del-btn { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--red-border); background: var(--red-bg); color: var(--red-light); cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+
+/* LOGIN */
+#login-screen { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 24px; }
+.login-box { width: 100%; max-width: 360px; }
+.login-logo { text-align: center; margin-bottom: 2rem; }
+.login-logo .pill { font-size: 48px; display: block; margin-bottom: 10px; animation: float 3s ease-in-out infinite; }
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+.login-logo h1 { font-size: 24px; font-weight: 600; color: var(--text); }
+.login-logo p { font-size: 13px; color: var(--text2); margin-top: 4px; }
+.login-field { margin-bottom: 14px; }
+.login-field label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 6px; font-weight: 500; }
+.login-input { width: 100%; height: 48px; background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius); color: var(--text); font-size: 15px; padding: 0 14px; font-family: inherit; }
+.login-input:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px rgba(46,160,67,0.2); }
+.pin-input { text-align: center; letter-spacing: 6px; font-size: 22px; font-weight: 600; }
+.login-btn-main { width: 100%; height: 50px; background: var(--green); color: white; border: none; border-radius: var(--radius); font-size: 16px; font-weight: 500; font-family: inherit; cursor: pointer; margin-top: 6px; transition: opacity 0.15s; }
+.login-btn-main:active { opacity: 0.8; }
+.login-err { background: var(--red-bg); border: 1px solid var(--red-border); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 13px; color: var(--red-light); margin-bottom: 12px; display: none; }
+.login-err.show { display: block; }
+.login-switch { text-align: center; margin-top: 16px; font-size: 13px; color: var(--text2); }
+.login-switch button { background: transparent; border: none; color: var(--green-light); cursor: pointer; font-size: 13px; font-family: inherit; text-decoration: underline; }
+.setup-hint { background: var(--bg3); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 12px; color: var(--text2); margin-bottom: 14px; line-height: 1.6; }
+
+/* TOAST */
+#toast { position: fixed; bottom: calc(80px + var(--safe-bottom)); left: 50%; transform: translateX(-50%) translateY(20px); background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius-pill); padding: 10px 20px; font-size: 13px; color: var(--text); opacity: 0; transition: all 0.3s; pointer-events: none; white-space: nowrap; z-index: 200; }
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+#toast.g { border-color: var(--green-border); color: var(--green-light); background: var(--green-bg); }
+#toast.r { border-color: var(--red-border); color: var(--red-light); background: var(--red-bg); }
+#toast.a { border-color: var(--amber-border); color: var(--amber-light); background: var(--amber-bg); }
+
+/* EMPTY STATE */
+.empty { text-align: center; padding: 32px 16px; color: var(--text2); font-size: 14px; }
+.empty span { display: block; font-size: 36px; margin-bottom: 8px; }
+
+/* INSTALL BANNER */
+#install-banner { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius); padding: 14px; margin-bottom: 12px; display: none; }
+#install-banner.show { display: flex; align-items: center; gap: 12px; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <span class="pill">💊</span>
+      <h1>دوائي</h1>
+      <p id="login-sub">سجّل دخولك للمتابعة</p>
+    </div>
+    <div class="login-err" id="lerr"></div>
+    <div id="lform">
+      <div class="login-field"><label>الاسم</label><input class="login-input" id="l-name" type="text" placeholder="أدخل اسمك" autocomplete="off"></div>
+      <div class="login-field"><label>مفتاح الدخول (4 أرقام)</label><input class="login-input pin-input" id="l-pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••"></div>
+      <button class="login-btn-main" onclick="doLogin()">دخول</button>
+      <div class="login-switch"><span>لا يوجد حساب؟ </span><button onclick="goSetup()">إنشاء حساب جديد</button></div>
+    </div>
+    <div id="sform" style="display:none">
+      <div class="setup-hint">اختر اسماً ومفتاح دخول من 4 أرقام. احفظ المفتاح في مكان آمن.</div>
+      <div class="login-field"><label>الاسم الكامل</label><input class="login-input" id="s-name" type="text" placeholder="مثال: أحمد محمد"></div>
+      <div class="login-field"><label>مفتاح الدخول</label><input class="login-input pin-input" id="s-pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••"></div>
+      <div class="login-field"><label>تأكيد المفتاح</label><input class="login-input pin-input" id="s-pin2" type="password" inputmode="numeric" maxlength="4" placeholder="••••"></div>
+      <button class="login-btn-main" onclick="doSetup()">إنشاء الحساب</button>
+      <div class="login-switch"><button onclick="goLogin()">العودة لتسجيل الدخول</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+
+  <!-- TODAY SCREEN -->
+  <div class="screen active" id="sc-today">
+    <div class="status-bar"></div>
+    <div class="scroll">
+      <div class="inner">
+        <div class="page-header" style="display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <h1 id="gr-name">مرحباً</h1>
+            <p id="gr-date"></p>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div id="user-av" style="width:36px;height:36px;border-radius:50%;background:var(--green-bg);border:1px solid var(--green-border);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--green-light)">أ</div>
+            <button onclick="doLogout()" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;font-size:16px">🔒</button>
+          </div>
+        </div>
+        <div id="notif-prompt"></div>
+        <div id="install-banner">
+          <div style="font-size:20px">📲</div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:500;color:var(--text)">ثبّت التطبيق على الهاتف</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px">للوصول السريع بدون متصفح</div>
+          </div>
+          <button id="install-btn" style="height:32px;padding:0 12px;background:var(--green);color:white;border:none;border-radius:8px;font-size:12px;font-family:inherit;cursor:pointer">تثبيت</button>
+        </div>
+        <div id="stock-alerts"></div>
+        <div class="stats-grid">
+          <div class="stat"><div class="stat-num" id="s-done">0</div><div class="stat-lbl">تم اليوم</div></div>
+          <div class="stat"><div class="stat-num" id="s-pend">0</div><div class="stat-lbl">متبقي</div></div>
+        </div>
+        <div class="card">
+          <div class="card-label">جدول اليوم</div>
+          <div class="prog-wrap">
+            <div class="prog-track"><div class="prog-fill" id="prog" style="width:0%"></div></div>
+            <div class="prog-labels"><span id="prog-lbl">0 من 0</span><span id="prog-pct">0%</span></div>
+          </div>
+          <div id="med-list"></div>
+        </div>
+      </div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+  </div>
+
+  <!-- STOCK SCREEN -->
+  <div class="screen" id="sc-stock">
+    <div class="status-bar"></div>
+    <div class="scroll">
+      <div class="inner">
+        <div class="page-header"><h1>المخزون</h1><p>متابعة كميات الأدوية</p></div>
+        <div id="stock-list"></div>
+      </div>
+    </div>
+    <nav class="nav" id="nav2"></nav>
+  </div>
+
+  <!-- REPORT SCREEN -->
+  <div class="screen" id="sc-report">
+    <div class="status-bar"></div>
+    <div class="scroll">
+      <div class="inner">
+        <div class="page-header"><h1>التقرير</h1><p>سجل الالتزام الشهري</p></div>
+        <div class="card">
+          <div class="cal-nav">
+            <button class="cal-nav-btn" onclick="chM(1)">›</button>
+            <span class="cal-title" id="cal-title"></span>
+            <button class="cal-nav-btn" onclick="chM(-1)">‹</button>
+          </div>
+          <div class="summary3">
+            <div class="s3"><div class="s3-num" style="color:var(--green-light)" id="r-p">0</div><div class="s3-lbl">مثالية</div></div>
+            <div class="s3"><div class="s3-num" style="color:var(--amber-light)" id="r-pa">0</div><div class="s3-lbl">جزئي</div></div>
+            <div class="s3"><div class="s3-num" style="color:var(--red-light)" id="r-m">0</div><div class="s3-lbl">فائتة</div></div>
+          </div>
+          <div class="cal-grid" id="cal-grid"></div>
+          <div class="legend">
+            <div class="leg"><div class="leg-dot" style="background:#1a4a2e;border:1px solid #56d364"></div>مثالي</div>
+            <div class="leg"><div class="leg-dot" style="background:#3d2e0a;border:1px solid #f0b429"></div>جزئي</div>
+            <div class="leg"><div class="leg-dot" style="background:#3d0f0e;border:1px solid #f85149"></div>فائت</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-label">الالتزام لكل دواء</div>
+          <div id="adh-list"></div>
+        </div>
+        <div class="card">
+          <div class="card-label">أيام بها خلل</div>
+          <div id="issue-list"></div>
+        </div>
+      </div>
+    </div>
+    <nav class="nav" id="nav3"></nav>
+  </div>
+
+  <!-- NOTIF SCREEN -->
+  <div class="screen" id="sc-notif">
+    <div class="status-bar"></div>
+    <div class="scroll">
+      <div class="inner">
+        <div class="page-header"><h1>الإشعارات</h1><p>ضبط التنبيهات التلقائية</p></div>
+        <div class="card">
+          <div class="card-label">حالة الإشعارات</div>
+          <div id="notif-chip" style="margin-bottom:12px"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:13px;color:var(--text2)">
+            <span>إشعارات مجدولة اليوم</span>
+            <span id="sched-count" style="font-weight:500;color:var(--text)">0</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-label">أنواع التنبيهات</div>
+          <div class="toggle-row">
+            <div><div class="toggle-lbl">تنبيه وقت الدواء</div><div class="toggle-sub">إشعار لحظة حلول الموعد</div></div>
+            <button class="tog on" id="tog-ontime" onclick="togs('ontime')"></button>
+          </div>
+          <div class="toggle-row">
+            <div><div class="toggle-lbl">تنبيه مسبق</div>
+              <div class="toggle-sub" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                قبل الموعد بـ
+                <select id="offset-sel" onchange="saveS()" style="height:26px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:12px;padding:0 6px;font-family:inherit">
+                  <option value="5">5 دق</option>
+                  <option value="10" selected>10 دق</option>
+                  <option value="15">15 دق</option>
+                  <option value="30">30 دق</option>
+                </select>
+              </div>
+            </div>
+            <button class="tog on" id="tog-before" onclick="togs('before')"></button>
+          </div>
+          <div class="toggle-row">
+            <div><div class="toggle-lbl">تنبيه الدواء الفائت</div><div class="toggle-sub">إذا لم يُسجَّل بعد 30 دقيقة</div></div>
+            <button class="tog on" id="tog-missed" onclick="togs('missed')"></button>
+          </div>
+          <div class="toggle-row">
+            <div><div class="toggle-lbl">تنبيه المخزون</div><div class="toggle-sub">عند الوصول لحد التحذير</div></div>
+            <button class="tog on" id="tog-stock" onclick="togs('stock')"></button>
+          </div>
+          <button class="test-notif-btn" onclick="testNotif()">🔔 إرسال إشعار تجريبي</button>
+        </div>
+        <div class="card">
+          <div class="card-label">جدول اليوم</div>
+          <div id="sched-list"></div>
+        </div>
+      </div>
+    </div>
+    <nav class="nav" id="nav4"></nav>
+  </div>
+
+  <!-- ADD SCREEN -->
+  <div class="screen" id="sc-add">
+    <div class="status-bar"></div>
+    <div class="scroll">
+      <div class="inner">
+        <div class="page-header"><h1>إضافة دواء</h1></div>
+        <div class="card">
+          <div class="form-row2">
+            <div class="form-field"><label class="form-label">اسم الدواء</label><input class="form-input" id="f-name" placeholder="مثال: باراسيتامول"></div>
+            <div class="form-field"><label class="form-label">الجرعة</label><input class="form-input" id="f-dose" placeholder="500mg"></div>
+          </div>
+          <div class="form-row2">
+            <div class="form-field"><label class="form-label">وقت التناول</label><input class="form-input" id="f-time" type="time" value="08:00"></div>
+            <div class="form-field"><label class="form-label">الفترة</label>
+              <select class="form-select" id="f-period">
+                <option value="morning">☀️ صباح</option>
+                <option value="noon">🌤️ ظهر</option>
+                <option value="evening">🌆 مساء</option>
+                <option value="night">🌙 ليل</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row2">
+            <div class="form-field"><label class="form-label">الكمية الابتدائية</label><input class="form-input" id="f-qty" type="number" placeholder="100" min="1"></div>
+            <div class="form-field"><label class="form-label">استهلاك يومي</label><input class="form-input" id="f-daily" type="number" value="1" min="1"></div>
+          </div>
+          <div class="form-field"><label class="form-label">تحذير عند الوصول إلى</label><input class="form-input" id="f-warn" type="number" value="10" min="1" placeholder="10 حبات"></div>
+          <button class="add-submit" onclick="addMed()">+ إضافة الدواء</button>
+        </div>
+        <div class="card">
+          <div class="card-label">الأدوية المسجلة</div>
+          <div id="manage-list"></div>
+        </div>
+      </div>
+    </div>
+    <nav class="nav" id="nav5"></nav>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════
+// CONSTANTS & STATE
+// ═══════════════════════════════════
+const ICONS={morning:'☀️',noon:'🌤️',evening:'🌆',night:'🌙'};
+const PBG={morning:'rgba(210,153,34,0.2)',noon:'rgba(31,111,235,0.2)',evening:'rgba(83,74,183,0.2)',night:'rgba(139,148,158,0.15)'};
+const PL={morning:'صباح',noon:'ظهر',evening:'مساء',night:'ليل'};
+const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+const DAR=['أح','إث','ثل','أر','خم','جم','سب'];
+const DNFULL=['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+
+let users={}, session=null, meds=[], nextId=1, history={};
+let vY=new Date().getFullYear(), vM=new Date().getMonth();
+let notifTimers=[], settings={ontime:true,before:true,missed:true,stock:true,offset:10};
+let deferredInstallPrompt=null;
+
+const TODAY=new Date();
+
+// ═══════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════
+function save(){
+  try{
+    localStorage.setItem('dawai_users',JSON.stringify(users));
+    if(session) localStorage.setItem('dawai_session',session.name);
+  }catch(e){}
+}
+function load(){
+  try{
+    const u=localStorage.getItem('dawai_users');
+    if(u) users=JSON.parse(u);
+    const s=localStorage.getItem('dawai_settings');
+    if(s) settings=Object.assign(settings,JSON.parse(s));
+    const sess=localStorage.getItem('dawai_session');
+    if(sess && users[sess.toLowerCase()]){
+      session={name:users[sess.toLowerCase()].name,pin:users[sess.toLowerCase()].pin};
+      meds=users[sess.toLowerCase()].meds||[];
+      history=users[sess.toLowerCase()].history||{};
+      nextId=meds.length?Math.max(...meds.map(m=>m.id))+1:1;
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+function saveUser(){
+  if(!session) return;
+  users[session.name.toLowerCase()].meds=meds;
+  users[session.name.toLowerCase()].history=history;
+  save();
+}
+
+// ═══════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════
+function dk(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function tdyk(){return dk(TODAY);}
+function t2m(t){const[h,m]=t.split(':').map(Number);return h*60+m;}
+function nowM(){return TODAY.getHours()*60+TODAY.getMinutes();}
+function stockSt(m){if(m.qty<=0)return'empty';if(m.qty<=m.warnAt*0.5)return'crit';if(m.qty<=m.warnAt)return'warn';return'ok';}
+function daysLeft(m){return m.daily>0?Math.floor(m.qty/m.daily):999;}
+
+// ═══════════════════════════════════
+// TOAST
+// ═══════════════════════════════════
+let toastT;
+function toast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='show '+(type||'');
+  clearTimeout(toastT);
+  toastT=setTimeout(()=>t.className='',2800);
+}
+
+// ═══════════════════════════════════
+// NAV
+// ═══════════════════════════════════
+const SCREENS=['today','stock','report','notif','add'];
+const NAVS=[
+  {id:'today',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><circle cx="12" cy="16" r="2" fill="currentColor" stroke="none"/></svg>',lbl:'اليوم'},
+  {id:'stock',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M3 12h18M3 18h18"/><circle cx="7" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="7" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="7" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg>',lbl:'المخزون'},
+  {id:'report',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><polyline points="7,17 11,12 15,14 20,8"/></svg>',lbl:'التقرير'},
+  {id:'notif',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',lbl:'إشعارات'},
+  {id:'add',icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>',lbl:'إضافة'},
+];
+let activeTab='today';
+
+function buildNavs(){
+  ['nav','nav2','nav3','nav4','nav5'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+    el.innerHTML=NAVS.map(n=>`<button class="nav-btn ${activeTab===n.id?'active':''}" onclick="goTab('${n.id}')">${n.icon}<span>${n.lbl}</span></button>`).join('');
+  });
+}
+
+function goTab(tab){
+  activeTab=tab;
+  SCREENS.forEach(s=>{
+    document.getElementById('sc-'+s).classList.toggle('active',s===tab);
+  });
+  buildNavs();
+  if(tab==='report') renderReport();
+  if(tab==='add') renderManage();
+  if(tab==='stock') renderStock();
+  if(tab==='notif'){renderNotifPage();}
+}
+
+// ═══════════════════════════════════
+// AUTH
+// ═══════════════════════════════════
+function showErr(m){const e=document.getElementById('lerr');e.textContent=m;e.classList.add('show');}
+function clearErr(){document.getElementById('lerr').classList.remove('show');}
+function goSetup(){document.getElementById('lform').style.display='none';document.getElementById('sform').style.display='block';document.getElementById('login-sub').textContent='إنشاء حساب جديد';clearErr();}
+function goLogin(){document.getElementById('sform').style.display='none';document.getElementById('lform').style.display='block';document.getElementById('login-sub').textContent='سجّل دخولك للمتابعة';clearErr();}
+
+function doSetup(){
+  const n=document.getElementById('s-name').value.trim();
+  const p=document.getElementById('s-pin').value.trim();
+  const p2=document.getElementById('s-pin2').value.trim();
+  if(!n){showErr('الرجاء إدخال الاسم');return;}
+  if(!/^\d{4}$/.test(p)){showErr('مفتاح الدخول يجب أن يكون 4 أرقام');return;}
+  if(p!==p2){showErr('مفتاح الدخول غير متطابق');return;}
+  if(users[n.toLowerCase()]){showErr('هذا الاسم مسجل مسبقاً');return;}
+  users[n.toLowerCase()]={name:n,pin:p,meds:[],history:{}};
+  save();
+  toast('✓ تم إنشاء الحساب');
+  document.getElementById('l-name').value=n;
+  goLogin();
+}
+
+function doLogin(){
+  const n=document.getElementById('l-name').value.trim();
+  const p=document.getElementById('l-pin').value.trim();
+  if(!n||!p){showErr('أدخل الاسم ومفتاح الدخول');return;}
+  const u=users[n.toLowerCase()];
+  if(!u){showErr('الاسم غير موجود — أنشئ حساباً جديداً');return;}
+  if(u.pin!==p){showErr('مفتاح الدخول غير صحيح');return;}
+  session={name:u.name,pin:p};
+  meds=u.meds||[]; history=u.history||{};
+  nextId=meds.length?Math.max(...meds.map(m=>m.id))+1:1;
+  save();
+  enterApp();
+}
+
+function doLogout(){
+  stopTimers();
+  saveUser();
+  localStorage.removeItem('dawai_session');
+  session=null;
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('l-pin').value='';
+  goLogin();
+}
+
+function enterApp(){
+  document.getElementById('login-screen').style.display='none';
+  // header
+  const ini=session.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('user-av').textContent=ini;
+  document.getElementById('gr-name').textContent='مرحباً، '+session.name.split(' ')[0];
+  document.getElementById('gr-date').textContent=DNFULL[TODAY.getDay()]+' '+TODAY.getDate()+' '+MONTHS[TODAY.getMonth()]+' '+TODAY.getFullYear();
+  checkNotifPerm();
+  schedAll();
+  renderToday();
+  buildNavs();
+  checkInstall();
+}
+
+function seedDemo(){
+  users['تجريبي']={name:'مستخدم تجريبي',pin:'1234',meds:[
+    {id:1,name:'باراسيتامول',dose:'500mg',time:'08:00',period:'morning',qty:90,daily:1,warnAt:10},
+    {id:2,name:'فيتامين د',dose:'1000 IU',time:'13:00',period:'noon',qty:28,daily:1,warnAt:10},
+    {id:3,name:'أوميغا 3',dose:'كبسولة',time:'21:00',period:'night',qty:7,daily:1,warnAt:10},
+  ],history:{}};
+  // seed 30 days history
+  const u=users['تجريبي'];
+  for(let i=1;i<=30;i++){const d=new Date(TODAY);d.setDate(d.getDate()-i);const k=dk(d);u.history[k]={};u.meds.forEach(m=>{u.history[k][m.id]=Math.random()>0.18;});}
+  const tk=dk(TODAY);u.history[tk]={};u.meds.forEach((m,i)=>{u.history[tk][m.id]=i===0;});
+  save();
+}
+
+// ═══════════════════════════════════
+// TODAY
+// ═══════════════════════════════════
+function renderToday(){
+  renderStockAlerts();
+  const rec=history[tdyk()]||{};
+  const total=meds.length, done=meds.filter(m=>rec[m.id]).length;
+  document.getElementById('s-done').textContent=done;
+  document.getElementById('s-pend').textContent=total-done;
+  const pct=total?Math.round(done/total*100):0;
+  document.getElementById('prog').style.width=pct+'%';
+  document.getElementById('prog-lbl').textContent=done+' من '+total;
+  document.getElementById('prog-pct').textContent=pct+'%';
+  const el=document.getElementById('med-list');
+  const sorted=[...meds].sort((a,b)=>t2m(a.time)-t2m(b.time));
+  if(!sorted.length){el.innerHTML='<div class="empty"><span>💊</span>لا توجد أدوية<br>أضف دواءك الأول من تبويب +</div>';return;}
+  el.innerHTML=sorted.map(m=>{
+    const st=stockSt(m);
+    const stockHint=st!=='ok'?` · <span style="color:${st==='crit'?'var(--red-light)':'var(--amber-light)'};font-size:11px">متبقي ${m.qty}</span>`:'';
+    const isLate=!rec[m.id]&&t2m(m.time)<nowM();
+    return`<div class="med-row">
+      <div class="med-ic" style="background:${PBG[m.period]}">${ICONS[m.period]}</div>
+      <div class="med-body">
+        <div class="med-title" style="${rec[m.id]?'text-decoration:line-through;opacity:0.4':''}">${m.name}</div>
+        <div class="med-sub${isLate?' late':''}">${m.time} · ${m.dose}${stockHint}</div>
+      </div>
+      <button class="pill-check${rec[m.id]?' done':''}" onclick="toggleMed(${m.id})">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>
+      </button>
+    </div>`;
+  }).join('');
+}
+
+function toggleMed(id){
+  if(!history[tdyk()]) history[tdyk()]={};
+  const wasOff=!history[tdyk()][id];
+  history[tdyk()][id]=wasOff;
+  const m=meds.find(x=>x.id===id);
+  if(wasOff&&m.qty>0){
+    m.qty-=m.daily; if(m.qty<0)m.qty=0;
+    if(m.qty<=m.warnAt&&settings.stock){
+      const st=stockSt(m);
+      sendNotif(st==='crit'?'🚨 مخزون حرج':'⚠️ مخزون منخفض',m.name+' — متبقي '+m.qty+' حبة فقط');
+      toast((st==='crit'?'🚨':'⚠️')+' '+m.name+' متبقي '+m.qty,'a');
+    } else {
+      toast('✓ تم تناول '+m.name,'g');
+    }
+  } else if(!wasOff){
+    m.qty+=m.daily;
+    toast('إلغاء: '+m.name);
+  }
+  saveUser();
+  renderToday();
+  renderSchedList();
+}
+
+function renderStockAlerts(){
+  const el=document.getElementById('stock-alerts');
+  const alerts=meds.filter(m=>stockSt(m)!=='ok');
+  if(!alerts.length){el.innerHTML='';return;}
+  el.innerHTML=`<div class="card" style="margin-bottom:12px">
+    <div class="card-label">⚠ تنبيهات المخزون</div>
+    ${alerts.map(m=>{
+      const st=stockSt(m),dl=daysLeft(m),isCrit=st==='crit'||st==='empty';
+      return`<div class="alert ${isCrit?'alert-danger':'alert-warn'}">
+        <div class="alert-ic">${isCrit?'🚨':'⚠️'}</div>
+        <div class="alert-body">
+          <div class="alert-title">${m.name}</div>
+          <div class="alert-sub">متبقي ${m.qty} حبة${dl<999?' · يكفي '+dl+' يوم':''}</div>
+        </div>
+      </div>`;}).join('')}
+  </div>`;
+}
+
+// ═══════════════════════════════════
+// STOCK
+// ═══════════════════════════════════
+function renderStock(){
+  const el=document.getElementById('stock-list');
+  if(!meds.length){el.innerHTML='<div class="empty"><span>📦</span>لا توجد أدوية</div>';return;}
+  el.innerHTML=meds.map(m=>{
+    const st=stockSt(m),dl=daysLeft(m);
+    const maxQ=Math.max(m.qty,m.warnAt*5,100),pct=Math.min(100,Math.round(m.qty/maxQ*100));
+    const barC=st==='ok'?'var(--green)':st==='warn'?'var(--amber)':'var(--red)';
+    const bCls=st==='ok'?'badge-ok':st==='warn'?'badge-warn':'badge-crit';
+    const bTxt=st==='ok'?'كافٍ':st==='warn'?'منخفض':'حرج';
+    const wCls=st==='crit'||st==='empty'?'crit':st==='warn'?'warn':'';
+    return`<div class="stock-card ${wCls}">
+      <div class="stock-top">
+        <div class="stock-ic" style="background:${PBG[m.period]}">${ICONS[m.period]}</div>
+        <div class="stock-info">
+          <div class="stock-name">${m.name}</div>
+          <div class="stock-meta">${m.dose} · ${m.daily} حبة/يوم</div>
+        </div>
+        <span class="stock-badge ${bCls}">${bTxt}</span>
+      </div>
+      <div class="stock-bar-track"><div class="stock-bar-fill" style="width:${pct}%;background:${barC}"></div></div>
+      <div class="stock-nums"><span>متبقي: <strong>${m.qty}</strong> حبة</span><span>${dl<999?'يكفي '+dl+' يوم':'—'}</span><span>حد التحذير: ${m.warnAt}</span></div>
+      ${st!=='ok'?`<div class="stock-warn-msg ${st==='crit'||st==='empty'?'c':'w'}">${st==='crit'||st==='empty'?'🚨 المخزون حرج جداً — يرجى إعادة التعبئة فوراً':'⚠️ المخزون منخفض — لا تنسَ إعادة التعبئة'}</div>`:''}
+      <div class="stock-actions">
+        <button class="btn-outline" onclick="editWarn(${m.id})">تعديل الحد</button>
+        <button class="btn-outline btn-green" onclick="openRefill(${m.id})">+ إعادة تعبئة</button>
+      </div>
+      <div class="refill-row" id="rf-${m.id}">
+        <input type="number" id="rfv-${m.id}" placeholder="الكمية المضافة" min="1">
+        <button onclick="doRefill(${m.id})">تأكيد</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function openRefill(id){const el=document.getElementById('rf-'+id);el.classList.toggle('open');if(el.classList.contains('open'))document.getElementById('rfv-'+id).focus();}
+function doRefill(id){
+  const val=parseInt(document.getElementById('rfv-'+id).value);
+  if(!val||val<1){toast('أدخل كمية صحيحة','a');return;}
+  const m=meds.find(x=>x.id===id);m.qty+=val;
+  document.getElementById('rf-'+id).classList.remove('open');
+  toast('✓ تمت إضافة '+val+' حبة لـ '+m.name,'g');
+  saveUser(); renderStock(); renderToday();
+}
+function editWarn(id){
+  const m=meds.find(x=>x.id===id);
+  const v=prompt('حد التحذير لـ '+m.name+' (الحالي: '+m.warnAt+'):', m.warnAt);
+  if(v&&!isNaN(v)&&parseInt(v)>0){m.warnAt=parseInt(v);toast('✓ تم تعديل الحد','g');saveUser();renderStock();}
+}
+
+// ═══════════════════════════════════
+// REPORT
+// ═══════════════════════════════════
+function chM(d){vM+=d;if(vM>11){vM=0;vY++;}if(vM<0){vM=11;vY--;}renderReport();}
+function renderReport(){
+  document.getElementById('cal-title').textContent=MONTHS[vM]+' '+vY;
+  const dim=new Date(vY,vM+1,0).getDate(),fd=new Date(vY,vM,1).getDay();
+  let perf=0,part=0,miss=0,issues=[];
+  let cal=DAR.map(d=>`<div class="cal-dh">${d}</div>`).join('');
+  for(let i=0;i<fd;i++) cal+='<div></div>';
+  for(let d=1;d<=dim;d++){
+    const k=vY+'-'+String(vM+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const isFut=new Date(vY,vM,d)>TODAY;
+    const isTod=d===TODAY.getDate()&&vM===TODAY.getMonth()&&vY===TODAY.getFullYear();
+    let cls='future';
+    if(!isFut&&meds.length){
+      const rec=history[k]||{};
+      const done=meds.filter(m=>rec[m.id]).length;
+      if(done===meds.length){cls='perfect';perf++;}
+      else if(done===0){cls='missed';miss++;}
+      else{cls='partial';part++;}
+      if(cls!=='perfect'){const mg=meds.filter(m=>!rec[m.id]).map(m=>m.name);if(mg.length)issues.push({d,m:vM+1,type:cls,miss:mg});}
+    }
+    cal+=`<div class="cal-d ${cls} ${isTod?'today-ring':''}">${d}</div>`;
+  }
+  document.getElementById('cal-grid').innerHTML=cal;
+  document.getElementById('r-p').textContent=perf;
+  document.getElementById('r-pa').textContent=part;
+  document.getElementById('r-m').textContent=miss;
+  document.getElementById('adh-list').innerHTML=meds.length?meds.map(m=>{
+    let tk=0,tot=0;
+    for(let d=1;d<=dim;d++){const k=vY+'-'+String(vM+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');if(new Date(vY,vM,d)<=TODAY&&history[k]){tot++;if(history[k][m.id])tk++;}}
+    const pct=tot?Math.round(tk/tot*100):0;
+    const c=pct>=80?'var(--green)':pct>=50?'var(--amber)':'var(--red)';
+    return`<div class="adh-row"><div class="adh-name">${m.name}</div><div class="adh-track"><div class="adh-fill" style="width:${pct}%;background:${c}"></div></div><div class="adh-pct">${pct}%</div></div>`;
+  }).join(''):'<div class="empty" style="padding:16px">لا توجد أدوية</div>';
+  document.getElementById('issue-list').innerHTML=issues.length?issues.slice(-8).reverse().map(iss=>`
+    <div class="issue-row">
+      <div class="issue-ic" style="background:${iss.type==='missed'?'var(--red-bg)':'var(--amber-bg)'}">${iss.type==='missed'?'✗':'⚠'}</div>
+      <div><div style="font-size:13px;font-weight:500;color:var(--text)">${iss.d}/${iss.m} — ${iss.type==='missed'?'فائت كلياً':'جزئي'}</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:3px">لم يُتناول: ${iss.miss.join('، ')}</div></div>
+    </div>`).join(''):'<div class="empty" style="padding:16px;font-size:13px">🎉 لا توجد أخطاء هذا الشهر!</div>';
+}
+
+// ═══════════════════════════════════
+// NOTIFICATIONS
+// ═══════════════════════════════════
+function checkNotifPerm(){
+  if(!('Notification' in window)){renderNotifPrompt('unsupported');return;}
+  renderNotifPrompt(Notification.permission);
+}
+function renderNotifPrompt(perm){
+  const el=document.getElementById('notif-prompt');
+  if(perm==='granted'){el.innerHTML='';return;}
+  if(perm==='denied'){
+    el.innerHTML=`<div class="notif-bar" style="border-color:var(--red-border);background:var(--red-bg)"><div style="font-size:20px">🔕</div><div class="notif-bar-text">الإشعارات محجوبة<div class="notif-bar-sub">اسمح بالإشعارات من إعدادات المتصفح</div></div></div>`;
+    return;
+  }
+  if(perm==='unsupported'){el.innerHTML='';return;}
+  el.innerHTML=`<div class="notif-bar"><div style="font-size:20px">🔔</div><div class="notif-bar-text">فعّل إشعارات الدواء<div class="notif-bar-sub">تنبيه تلقائي عند كل موعد</div></div><button class="notif-bar-btn" onclick="reqNotif()">تفعيل</button></div>`;
+}
+function reqNotif(){
+  Notification.requestPermission().then(p=>{
+    renderNotifPrompt(p);
+    renderNotifPage();
+    if(p==='granted'){toast('✓ تم تفعيل الإشعارات','g');schedAll();}
+    else toast('لم يتم السماح بالإشعارات','r');
+  });
+}
+function sendNotif(title,body){
+  if(!('Notification' in window)||Notification.permission!=='granted') return false;
+  try{new Notification(title,{body,dir:'rtl',lang:'ar',tag:title});return true;}catch(e){return false;}
+}
+function testNotif(){
+  if(Notification.permission!=='granted'){reqNotif();return;}
+  const ok=sendNotif('💊 دوائي — اختبار','التنبيهات تعمل بشكل صحيح ✓');
+  toast(ok?'✓ تم إرسال الإشعار التجريبي':'فشل — تحقق من إذن الإشعارات',ok?'g':'r');
+}
+function stopTimers(){notifTimers.forEach(t=>clearTimeout(t));notifTimers=[];}
+function schedAll(){
+  stopTimers();
+  if(!('Notification' in window)||Notification.permission!=='granted') return;
+  const now=new Date(), offset=settings.offset;
+  meds.forEach(m=>{
+    const[h,min]=m.time.split(':').map(Number);
+    if(settings.before){
+      const ft=new Date(now.getFullYear(),now.getMonth(),now.getDate(),h,min-offset,0);
+      const ms=ft-now;
+      if(ms>0&&ms<86400000){notifTimers.push(setTimeout(()=>{const rec=history[tdyk()]||{};if(!rec[m.id])sendNotif('⏰ موعد قريب',m.name+' بعد '+offset+' دقائق — '+m.dose);},ms));}
+    }
+    if(settings.ontime){
+      const ft=new Date(now.getFullYear(),now.getMonth(),now.getDate(),h,min,0);
+      const ms=ft-now;
+      if(ms>0&&ms<86400000){notifTimers.push(setTimeout(()=>{const rec=history[tdyk()]||{};if(!rec[m.id])sendNotif('💊 حان موعد الدواء',m.name+' · '+m.dose);},ms));}
+    }
+    if(settings.missed){
+      const ft=new Date(now.getFullYear(),now.getMonth(),now.getDate(),h,min+30,0);
+      const ms=ft-now;
+      if(ms>0&&ms<86400000){notifTimers.push(setTimeout(()=>{const rec=history[tdyk()]||{};if(!rec[m.id])sendNotif('🚨 دواء فائت!',m.name+' — لم يُتناول منذ 30 دقيقة');},ms));}
+    }
+  });
+  renderSchedList();
+}
+function togs(key){
+  settings[key]=!settings[key];
+  document.getElementById('tog-'+key).classList.toggle('on',settings[key]);
+  schedAll(); saveS(); toast(settings[key]?'✓ تم التفعيل':'تم الإيقاف','g');
+}
+function saveS(){
+  settings.offset=parseInt(document.getElementById('offset-sel').value)||10;
+  try{localStorage.setItem('dawai_settings',JSON.stringify(settings));}catch(e){}
+  schedAll();
+}
+function renderNotifPage(){
+  const perm=('Notification' in window)?Notification.permission:'unsupported';
+  const chip=document.getElementById('notif-chip');
+  if(perm==='granted') chip.innerHTML='<span class="notif-status-chip chip-ok">✓ مفعّلة</span>';
+  else if(perm==='denied') chip.innerHTML='<span class="notif-status-chip chip-off">✗ محجوبة</span><button class="notif-bar-btn" style="margin-right:10px" onclick="reqNotif()">تفعيل</button>';
+  else chip.innerHTML='<span class="notif-status-chip chip-pending">في انتظار الإذن</span><button class="notif-bar-btn" style="margin-right:10px" onclick="reqNotif()">تفعيل</button>';
+  document.getElementById('sched-count').textContent=notifTimers.length;
+  renderSchedList();
+}
+function renderSchedList(){
+  const el=document.getElementById('sched-list');
+  if(!el) return;
+  if(!meds.length){el.innerHTML='<div class="empty" style="padding:16px;font-size:13px">لا توجد أدوية</div>';return;}
+  const nm=nowM(), offset=settings.offset, items=[];
+  const rec=history[tdyk()]||{};
+  meds.forEach(m=>{
+    const[h,min]=m.time.split(':').map(Number),mMin=h*60+min;
+    if(settings.before){const bMin=mMin-offset;const bH=Math.floor(bMin/60),bM=bMin%60;const st=nm>bMin?(rec[m.id]?'sent':'sent'):'pending';items.push({time:String(bH<0?0:bH).padStart(2,'0')+':'+String(bM<0?0:bM).padStart(2,'0'),lbl:'تنبيه مسبق — '+m.name,st,sort:bMin});}
+    if(settings.ontime){const st=nm>mMin?(rec[m.id]?'sent':'late'):'pending';items.push({time:m.time,lbl:'موعد '+m.name+' · '+m.dose,st,sort:mMin});}
+    if(settings.missed){const lMin=mMin+30;const lH=Math.floor(lMin/60),lM=lMin%60;const st=nm>lMin?(rec[m.id]?'sent':'late'):'pending';items.push({time:String(lH).padStart(2,'0')+':'+String(lM).padStart(2,'0'),lbl:'فائت — '+m.name,st,sort:lMin});}
+  });
+  items.sort((a,b)=>a.sort-b.sort);
+  const stTxt={pending:'قادم',sent:'أُرسل',late:'فائت'};
+  el.innerHTML=items.slice(0,15).map(it=>`<div class="sched-row"><div class="sched-dot ${it.st}"></div><div class="sched-t">${it.time}</div><div class="sched-name">${it.lbl}</div><div class="sched-status ${it.st}">${stTxt[it.st]}</div></div>`).join('');
+}
+
+// ═══════════════════════════════════
+// ADD / MANAGE
+// ═══════════════════════════════════
+function addMed(){
+  const n=document.getElementById('f-name').value.trim();
+  const dose=document.getElementById('f-dose').value.trim();
+  const time=document.getElementById('f-time').value;
+  const period=document.getElementById('f-period').value;
+  const qty=parseInt(document.getElementById('f-qty').value)||0;
+  const daily=parseInt(document.getElementById('f-daily').value)||1;
+  const warn=parseInt(document.getElementById('f-warn').value)||10;
+  if(!n){toast('أدخل اسم الدواء','a');return;}
+  meds.push({id:nextId++,name:n,dose:dose||'جرعة',time,period,qty,daily,warnAt:warn});
+  ['f-name','f-dose','f-qty'].forEach(id=>document.getElementById(id).value='');
+  toast('✓ تمت إضافة '+n,'g');
+  saveUser(); renderManage(); renderToday(); schedAll();
+}
+function deleteMed(id){
+  if(!confirm('حذف هذا الدواء؟')) return;
+  meds=meds.filter(m=>m.id!==id);
+  saveUser(); renderManage(); renderToday(); schedAll();
+  toast('تم الحذف');
+}
+function renderManage(){
+  const el=document.getElementById('manage-list');
+  if(!meds.length){el.innerHTML='<div class="empty" style="padding:16px">لا توجد أدوية مسجلة</div>';return;}
+  el.innerHTML=meds.map(m=>`<div class="manage-row">
+    <div class="med-ic" style="background:${PBG[m.period]};width:36px;height:36px;border-radius:9px;flex-shrink:0">${ICONS[m.period]}</div>
+    <div class="med-body"><div class="med-title">${m.name}</div><div class="med-sub">${m.time} · ${m.dose} · مخزون: ${m.qty}</div></div>
+    <button class="del-btn" onclick="deleteMed(${m.id})">✕</button>
+  </div>`).join('');
+}
+
+// ═══════════════════════════════════
+// PWA INSTALL
+// ═══════════════════════════════════
+function checkInstall(){
+  if(window.matchMedia('(display-mode: standalone)').matches) return;
+  if(deferredInstallPrompt){
+    const b=document.getElementById('install-banner');
+    b.classList.add('show');
+    document.getElementById('install-btn').onclick=()=>{
+      deferredInstallPrompt.prompt();
+      deferredInstallPrompt.userChoice.then(()=>{deferredInstallPrompt=null;b.classList.remove('show');});
+    };
+  }
+}
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstallPrompt=e;if(session)checkInstall();});
+
+// ═══════════════════════════════════
+// INIT
+// ═══════════════════════════════════
+if(!load()){
+  // first time: seed demo account
+  if(!users['تجريبي']) seedDemo();
+  document.getElementById('login-screen').style.display='flex';
+} else {
+  enterApp();
+}
+</script>
+
+
+</body>
+</html>

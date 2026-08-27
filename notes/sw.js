@@ -1,5 +1,5 @@
 /* sw.js — עבודה גם בלי אינטרנט */
-var CACHE = 'stickynotes-v1';
+var CACHE = 'stickynotes-v2';
 var ASSETS = [
   './',
   'index.html',

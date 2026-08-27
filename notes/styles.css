@@ -243,17 +243,37 @@ body {
 .tool:hover { background: rgba(0,0,0,.14); }
 .tool svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
 
+.note-title {
+  flex: none;
+  margin: 6px 11px 0;
+  padding: 0 0 5px;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--edge) 85%, #000 4%);
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  font-size: 14.5px;
+  direction: rtl;
+  text-align: right;
+  outline: none;
+}
+.note-title::placeholder { color: rgba(40,32,18,.34); font-weight: 500; }
+.note-title:focus { border-bottom-color: color-mix(in srgb, var(--edge) 60%, #000 35%); }
+
 .note-text {
   flex: 1;
   width: 100%;
   min-height: 0;
-  padding: 9px 11px 16px;
+  padding: 7px 11px 16px;
   border: 0;
   background: none;
   color: inherit;
   font: inherit;
   font-size: 14.5px;
   line-height: 1.55;
+  direction: rtl;
+  text-align: right;
   resize: none;
   outline: none;
   overflow: auto;
@@ -358,7 +378,8 @@ body.solo { overflow: hidden; background: #ffe27a; }
 .solo-palette .chip { width: 16px; height: 16px; }
 .solo-palette .chip.on { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3.5px rgba(0,0,0,.45); }
 .solo-head .tool { -webkit-app-region: no-drag; font-size: 15px; }
-.solo-note .note-text { padding: 10px 12px; font-size: 15px; }
+.solo-note .note-title { margin: 8px 12px 0; font-size: 15px; }
+.solo-note .note-text { padding: 8px 12px; font-size: 15px; }
 .solo-status {
   flex: none;
   height: 18px;

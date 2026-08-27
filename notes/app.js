@@ -13,7 +13,7 @@
   var helpDlg  = document.getElementById('help');
   var installBtn = document.getElementById('install');
 
-  var NOTE_W = 220, NOTE_H = 220, MIN_W = 150, MIN_H = 120;
+  var NOTE_W = 220, NOTE_H = 230, MIN_W = 150, MIN_H = 150;
   var els = Object.create(null);   // id -> element
   var lastDeleted = [];
   var saveTimers = Object.create(null);
@@ -38,9 +38,11 @@
     el.dataset.color = c.id;
   }
 
+  /* טיימר נפרד לכל שדה: אחרת הקלדה בגוף הפתק מבטלת שמירה ממתינה של הכותרת. */
   function saveSoon(id, patch) {
-    clearTimeout(saveTimers[id]);
-    saveTimers[id] = setTimeout(function () { Store.update(id, patch); }, 250);
+    var key = id + ':' + Object.keys(patch).join(',');
+    clearTimeout(saveTimers[key]);
+    saveTimers[key] = setTimeout(function () { Store.update(id, patch); }, 250);
   }
 
   /* ---------- רינדור ---------- */
@@ -60,14 +62,25 @@
     applyColor(el, n.color);
     place(el, n);
 
+    var ti = el.querySelector('.note-title');
     var ta = el.querySelector('.note-text');
+    ti.value = n.title || '';
     ta.value = n.text || '';
 
+    ti.addEventListener('input', function () {
+      saveSoon(n.id, { title: ti.value });
+      applyFilter();
+    });
+    ti.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); ta.focus(); }   /* Enter בכותרת יורד לגוף הפתק */
+    });
     ta.addEventListener('input', function () {
       saveSoon(n.id, { text: ta.value });
       applyFilter();
     });
-    ta.addEventListener('focus', function () { bringToFront(n.id, el); });
+    [ti, ta].forEach(function (f) {
+      f.addEventListener('focus', function () { bringToFront(n.id, el); });
+    });
 
     /* לוח הצבעים של הפתק */
     var pal = el.querySelector('.note-palette');
@@ -120,7 +133,9 @@
       seen[n.id] = true;
       var el = els[n.id];
       if (!el) { buildNote(n); return; }
+      var ti = el.querySelector('.note-title');
       var ta = el.querySelector('.note-text');
+      if (document.activeElement !== ti && ti.value !== (n.title || '')) ti.value = n.title || '';
       if (document.activeElement !== ta && ta.value !== (n.text || '')) ta.value = n.text || '';
       if (el.dataset.color !== n.color) applyColor(el, n.color);
       if (!el.classList.contains('dragging')) place(el, n);
@@ -164,6 +179,7 @@
     var spot = nextSpot();
     var n = {
       id: Store.uid(),
+      title: '',
       text: text || '',
       color: defaultColor,
       x: spot.x, y: spot.y, w: NOTE_W, h: NOTE_H,
@@ -174,7 +190,8 @@
     Store.add(n);
     var el = buildNote(n);
     updateEmpty();
-    el.querySelector('.note-text').focus();
+    /* פתק ריק נפתח על הכותרת; פתק שנוצר מטקסט קיים נפתח על הגוף */
+    el.querySelector(text ? '.note-text' : '.note-title').focus();
     el.animate(
       [{ transform: 'rotate(var(--rot)) scale(.86)', opacity: 0 }, { transform: 'rotate(var(--rot)) scale(1)', opacity: 1 }],
       { duration: 180, easing: 'cubic-bezier(.2,.9,.3,1.2)' }
@@ -290,7 +307,7 @@
         .requestWindow({ width: Math.max(260, n.w || 280), height: Math.max(260, n.h || 300) })
         .then(function (win) {
           var doc = win.document;
-          doc.title = 'פתק';
+          doc.title = (n.title && n.title.trim()) || 'פתק';
           doc.documentElement.lang = 'he';
           doc.documentElement.dir = 'rtl';
           doc.documentElement.style.height = '100%';
@@ -319,7 +336,8 @@
     Object.keys(els).forEach(function (id) {
       var el = els[id];
       if (!q) { el.classList.remove('dim', 'hit'); return; }
-      var hit = el.querySelector('.note-text').value.toLowerCase().indexOf(q) !== -1;
+      var hay = (el.querySelector('.note-title').value + '\n' + el.querySelector('.note-text').value).toLowerCase();
+      var hit = hay.indexOf(q) !== -1;
       el.classList.toggle('hit', hit);
       el.classList.toggle('dim', !hit);
     });
@@ -372,6 +390,7 @@
         if (!n || typeof n !== 'object') return;
         var note = {
           id: n.id && !byId[n.id] ? n.id : Store.uid(),
+          title: String(n.title || '').slice(0, 80),
           text: String(n.text || ''),
           color: Store.colorOf(n.color).id,
           x: clamp(Number(n.x) || 24, 0, 20000),
@@ -520,7 +539,9 @@
   }
   if (!Store.all().length && !Store.prefs().seeded) {
     Store.prefs({ seeded: true });
-    addNote('ברוכים הבאים 👋\n\n• גררו את הפס העליון כדי להזיז\n• ⇱ פותח פתק צף מעל כל החלונות\n• "התקן במחשב" מדביק את הלוח לשולחן העבודה');
+    var first = addNote('• גררו את הפס העליון כדי להזיז\n• ⇱ פותח פתק צף מעל כל החלונות\n• "התקן במחשב" מדביק את הלוח לשולחן העבודה');
+    Store.update(first.id, { title: 'ברוכים הבאים 👋' });
+    els[first.id].querySelector('.note-title').value = 'ברוכים הבאים 👋';
     document.activeElement.blur();
   }
 })();

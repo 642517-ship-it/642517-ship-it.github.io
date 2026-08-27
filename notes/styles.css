@@ -1,0 +1,384 @@
+/* פתקים — עיצוב */
+
+:root {
+  --ink:        #2b2419;
+  --ink-soft:   #6b6152;
+  --surface:    #fbf7ef;
+  --surface-2:  #ffffff;
+  --board:      #f0e9dc;
+  --board-dot:  rgba(120, 100, 70, .16);
+  --line:       rgba(60, 48, 28, .14);
+  --shadow:     0 1px 2px rgba(50,40,20,.10), 0 8px 22px rgba(50,40,20,.14);
+  --shadow-lift:0 4px 10px rgba(50,40,20,.14), 0 22px 44px rgba(50,40,20,.22);
+  --accent:     #b8752a;
+  --radius:     12px;
+  --bar-h:      58px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink:       #ece4d6;
+    --ink-soft:  #a2988a;
+    --surface:   #221e19;
+    --surface-2: #2b2620;
+    --board:     #191612;
+    --board-dot: rgba(255, 240, 200, .07);
+    --line:      rgba(255, 240, 210, .12);
+    --shadow:     0 1px 2px rgba(0,0,0,.4), 0 8px 22px rgba(0,0,0,.45);
+    --shadow-lift:0 4px 10px rgba(0,0,0,.45), 0 22px 44px rgba(0,0,0,.6);
+    --accent:    #e0a760;
+  }
+}
+
+* { box-sizing: border-box; }
+
+/* גובר על display:flex/inline-flex של רכיבים שמוסתרים דרך התכונה hidden */
+[hidden] { display: none !important; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font: 15px/1.5 "Segoe UI", "Noto Sans Hebrew", "Rubik", system-ui, -apple-system, "Helvetica Neue", sans-serif;
+  color: var(--ink);
+  background: var(--board);
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ---------- סרגל עליון ---------- */
+
+.bar {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: var(--bar-h);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: saturate(1.4) blur(12px);
+  border-bottom: 1px solid var(--line);
+  z-index: 10000;
+}
+
+.bar-group { display: flex; align-items: center; gap: 8px; }
+.bar-search { flex: 1; position: relative; max-width: 420px; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 13px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface-2);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .12s, border-color .12s, transform .06s;
+}
+.btn:hover  { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
+.btn:active { transform: translateY(1px); }
+.btn-primary { background: var(--accent); border-color: transparent; color: #fff; }
+.btn-primary:hover { filter: brightness(1.06); }
+.btn-icon { padding: 0; width: 36px; justify-content: center; }
+.btn svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+#search {
+  width: 100%;
+  height: 36px;
+  padding: 0 36px 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface-2);
+  color: var(--ink);
+  font: inherit;
+}
+#search:focus { outline: 2px solid color-mix(in srgb, var(--accent) 60%, transparent); outline-offset: -1px; }
+.search-icon {
+  position: absolute;
+  inset-inline-start: 11px;
+  top: 50%;
+  translate: 0 -50%;
+  width: 16px; height: 16px;
+  fill: none; stroke: var(--ink-soft); stroke-width: 2; stroke-linecap: round;
+  pointer-events: none;
+}
+
+.swatches { display: flex; gap: 5px; }
+.chip {
+  width: 20px; height: 20px;
+  border: 1px solid rgba(0,0,0,.16);
+  border-radius: 50%;
+  padding: 0;
+  cursor: pointer;
+  transition: transform .1s, box-shadow .1s;
+}
+.chip:hover { transform: scale(1.15); }
+.chip.on { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent); }
+
+.menu {
+  position: absolute;
+  top: calc(var(--bar-h) - 8px);
+  inset-inline-end: 12px;
+  min-width: 210px;
+  padding: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  box-shadow: var(--shadow-lift);
+  z-index: 10001;
+}
+.menu button {
+  display: block;
+  width: 100%;
+  padding: 9px 11px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.menu button:hover { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.menu .danger { color: #c0392b; }
+@media (prefers-color-scheme: dark) { .menu .danger { color: #ff8a75; } }
+.menu hr { border: 0; border-top: 1px solid var(--line); margin: 5px 4px; }
+
+/* ---------- הלוח ---------- */
+
+.board {
+  position: absolute;
+  inset: var(--bar-h) 0 0 0;
+  overflow: auto;
+  direction: ltr;                 /* מיקום פיזי לפתקים, ללא תלות בכיוון הכתיבה */
+  background-image: radial-gradient(var(--board-dot) 1.2px, transparent 1.2px);
+  background-size: 26px 26px;
+}
+
+.empty {
+  position: absolute;
+  inset-inline-start: 0;
+  inset-inline-end: 0;
+  top: 34%;
+  text-align: center;
+  color: var(--ink-soft);
+  direction: rtl;
+}
+.linklike {
+  border: 0; background: none; padding: 4px;
+  color: var(--accent); font: inherit; font-weight: 600;
+  cursor: pointer; text-decoration: underline;
+}
+
+/* ---------- פתק ---------- */
+
+.note {
+  --bg: #ffe27a;
+  --edge: #f0c94a;
+  --rot: 0deg;
+  position: absolute;
+  direction: rtl;
+  display: flex;
+  flex-direction: column;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--bg) 92%, #fff) 0%, var(--bg) 22%),
+    var(--bg);
+  color: #241f13;
+  border-radius: 3px 3px 3px 10px;   /* פיזי: הפינה המעוגלת בצד הקיפול */
+  box-shadow: var(--shadow);
+  rotate: var(--rot);
+  transition: box-shadow .15s, opacity .15s, filter .15s;
+}
+.note::after {                     /* פינה מקופלת */
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  border-width: 0 0 18px 18px;
+  border-style: solid;
+  border-color: transparent transparent color-mix(in srgb, var(--edge) 75%, #000 6%) transparent;
+  border-bottom-left-radius: 10px;
+  opacity: .55;
+  pointer-events: none;
+}
+.note:focus-within { box-shadow: var(--shadow-lift); }
+.note.dragging { box-shadow: var(--shadow-lift); rotate: 0deg; cursor: grabbing; }
+.note.dim { opacity: .28; filter: saturate(.4); }
+.note.hit { box-shadow: var(--shadow-lift), 0 0 0 2px var(--accent); }
+
+.note-head {
+  height: 26px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 4px;
+  cursor: grab;
+  touch-action: none;
+  background: color-mix(in srgb, var(--edge) 42%, transparent);
+  border-radius: 3px 3px 0 0;
+}
+.note-head:active { cursor: grabbing; }
+
+.note-tools { display: flex; gap: 1px; opacity: 0; transition: opacity .12s; }
+.note:hover .note-tools,
+.note:focus-within .note-tools { opacity: 1; }
+
+.tool {
+  width: 22px; height: 20px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 5px;
+  background: none; color: #3a3122;
+  font-size: 13px; line-height: 1;
+  cursor: pointer;
+}
+.tool:hover { background: rgba(0,0,0,.14); }
+.tool svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+
+.note-text {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  padding: 9px 11px 16px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 14.5px;
+  line-height: 1.55;
+  resize: none;
+  outline: none;
+  overflow: auto;
+}
+.note-text::placeholder { color: rgba(40,32,18,.38); }
+
+.note-palette {
+  position: absolute;
+  top: 26px;
+  inset-inline-end: 4px;
+  display: flex;
+  gap: 5px;
+  padding: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  box-shadow: var(--shadow-lift);
+  z-index: 5;
+}
+
+.note-resize {
+  position: absolute;
+  right: 0; bottom: 0;          /* פיזי, כדי שהגרירה תואמת לכיוון העכבר */
+  width: 18px; height: 18px;
+  cursor: nwse-resize;
+  touch-action: none;
+}
+.note-resize::before {
+  content: "";
+  position: absolute;
+  right: 4px; bottom: 4px;
+  width: 8px; height: 8px;
+  border-right: 2px solid rgba(0,0,0,.28);
+  border-bottom: 2px solid rgba(0,0,0,.28);
+  border-radius: 0 0 2px 0;
+}
+
+/* ---------- הודעה קופצת ---------- */
+
+.toast {
+  position: fixed;
+  bottom: 20px;
+  inset-inline-start: 50%;
+  translate: 50% 0;
+  max-width: min(90vw, 420px);
+  padding: 10px 16px;
+  background: #2b2419;
+  color: #fdf9f1;
+  border-radius: 10px;
+  box-shadow: var(--shadow-lift);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s, translate .18s;
+  z-index: 10002;
+}
+.toast.show { opacity: 1; translate: 50% -6px; }
+
+/* ---------- דיאלוג עזרה ---------- */
+
+dialog {
+  max-width: 520px;
+  padding: 22px 24px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-2);
+  color: var(--ink);
+  box-shadow: var(--shadow-lift);
+}
+dialog::backdrop { background: rgba(20,16,10,.45); }
+dialog h2 { margin: 0 0 12px; font-size: 19px; }
+dialog ol { margin: 0 0 12px; padding-inline-start: 20px; }
+dialog li { margin-bottom: 10px; }
+dialog .ico { display: inline-block; padding: 0 5px; background: var(--board); border-radius: 4px; }
+dialog .fine { color: var(--ink-soft); font-size: 13px; margin: 0 0 16px; }
+dialog form { text-align: end; }
+
+/* ---------- חלון פתק בודד / צף ---------- */
+
+body.solo { overflow: hidden; background: #ffe27a; }
+
+.solo-note {
+  --bg: #ffe27a;
+  --edge: #f0c94a;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: #241f13;
+}
+.solo-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 8px;
+  background: color-mix(in srgb, var(--edge) 42%, transparent);
+  -webkit-app-region: drag;
+}
+.solo-palette { display: flex; gap: 5px; -webkit-app-region: no-drag; }
+.solo-palette .chip { width: 16px; height: 16px; }
+.solo-palette .chip.on { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3.5px rgba(0,0,0,.45); }
+.solo-head .tool { -webkit-app-region: no-drag; font-size: 15px; }
+.solo-note .note-text { padding: 10px 12px; font-size: 15px; }
+.solo-status {
+  flex: none;
+  height: 18px;
+  padding-inline-end: 10px;
+  font-size: 11px;
+  color: rgba(40,32,18,.5);
+  text-align: end;
+}
+
+/* ---------- מסכים קטנים ---------- */
+
+@media (max-width: 640px) {
+  :root { --bar-h: 52px; }
+  .bar { gap: 8px; padding: 0 8px; }
+  .btn span { display: none; }
+  .btn { padding: 0 10px; }
+  .swatches { display: none; }
+  .note-tools { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}

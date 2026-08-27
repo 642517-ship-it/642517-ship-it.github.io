@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>פתקים</title>
+<meta name="description" content="לוח פתקים דביקים — עובד בדפדפן, מותקן על שולחן העבודה, ופתק צף מעל כל החלונות.">
+<meta name="theme-color" content="#f3ede1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1a1713" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="פתקים">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="bar-group">
+    <button id="add" class="btn btn-primary" title="פתק חדש (N)">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      <span>פתק חדש</span>
+    </button>
+    <div class="swatches" id="swatches" role="group" aria-label="צבע ברירת מחדל"></div>
+  </div>
+
+  <div class="bar-group bar-search">
+    <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+    <input id="search" type="search" placeholder="חיפוש בפתקים…" aria-label="חיפוש בפתקים">
+  </div>
+
+  <div class="bar-group">
+    <button id="install" class="btn" title="התקנה כאפליקציה על שולחן העבודה">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M8 11l4 4 4-4M4 20h16"/></svg>
+      <span>התקן במחשב</span>
+    </button>
+    <button id="menu-btn" class="btn btn-icon" title="עוד" aria-haspopup="true" aria-expanded="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg>
+    </button>
+    <div id="menu" class="menu" hidden>
+      <button data-act="export">גיבוי לקובץ</button>
+      <button data-act="import">שחזור מקובץ</button>
+      <button data-act="tidy">סדר את הלוח</button>
+      <button data-act="help">איך מדביקים לשולחן העבודה?</button>
+      <hr>
+      <button data-act="clear" class="danger">מחק הכול</button>
+    </div>
+  </div>
+</header>
+
+<main id="board" class="board" tabindex="-1">
+  <p id="empty" class="empty">
+    אין פתקים עדיין.<br>
+    <button class="linklike" id="empty-add">צור את הפתק הראשון</button>
+  </p>
+</main>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<dialog id="help">
+  <h2>איך מדביקים את הפתקים?</h2>
+  <ol>
+    <li><b>על שולחן העבודה</b> — לחצו על <b>התקן במחשב</b> בסרגל למעלה (או בכרום: ⋮ ← Cast, save and share ← Install page as app). נוצר קיצור דרך רגיל בשולחן העבודה ובשורת המשימות, והפתקים נפתחים בחלון משלהם בלי סרגלי דפדפן.</li>
+    <li><b>פתק צף מעל הכול</b> — לחצו על <span class="ico">⇱</span> בפתק. הוא נפתח בחלון קטן שנשאר <b>מעל</b> שאר החלונות, גם כשעובדים בתוכנה אחרת. (בכרום/אדג' 116+; בשאר הדפדפנים נפתח חלון קטן רגיל.)</li>
+    <li><b>בדפדפן</b> — פשוט שמרו את הכתובת במועדפים או קבעו אותה כדף הבית.</li>
+  </ol>
+  <p class="fine">הפתקים נשמרים מקומית במכשיר הזה בלבד ועובדים גם בלי אינטרנט. לגיבוי או להעברה למחשב אחר — תפריט ⋮ ← גיבוי לקובץ.</p>
+  <form method="dialog"><button class="btn btn-primary">הבנתי</button></form>
+</dialog>
+
+<input type="file" id="file" accept="application/json,.json" hidden>
+
+<template id="note-tpl">
+  <article class="note" tabindex="0">
+    <div class="note-head">
+      <div class="note-tools">
+        <button class="tool tool-color" title="צבע">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/></svg>
+        </button>
+        <button class="tool tool-float" title="פתק צף מעל כל החלונות">⇱</button>
+        <button class="tool tool-del" title="מחיקה">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12"/></svg>
+        </button>
+      </div>
+    </div>
+    <textarea class="note-text" dir="auto" spellcheck="false" placeholder="כתבו כאן…"></textarea>
+    <div class="note-palette" hidden></div>
+    <div class="note-resize" title="שינוי גודל"></div>
+  </article>
+</template>
+
+<script src="store.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+{
+  "name": "פתקים",
+  "short_name": "פתקים",
+  "description": "לוח פתקים דביקים — בדפדפן, על שולחן העבודה, וכפתק צף מעל כל החלונות.",
+  "lang": "he",
+  "dir": "rtl",
+  "id": "/notes/",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#f0e9dc",
+  "theme_color": "#f3ede1",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "פתק חדש", "url": "./?new=1", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] }
+  ]
+}

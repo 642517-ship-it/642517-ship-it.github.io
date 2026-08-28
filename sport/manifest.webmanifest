@@ -1,0 +1,25 @@
+{
+  "name": "يلا رياضة",
+  "short_name": "يلا رياضة",
+  "description": "تنسيق مواعيد الرياضة مع صديقك برابط واحد بدل رسائل الواتساب المتفرقة.",
+  "lang": "ar",
+  "dir": "rtl",
+  "id": "/sport/",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#f1f4ee",
+  "theme_color": "#f4f6f2",
+  "categories": ["lifestyle", "health", "productivity"],
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "اقتراح موعد", "url": "./#new", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] }
+  ]
+}

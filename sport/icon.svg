@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="يلا رياضة">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3d9b62"/>
+      <stop offset="1" stop-color="#226a41"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#g)"/>
+  <g fill="none" stroke="#ffffff" stroke-linecap="round" stroke-width="34">
+    <path d="M148 256h216"/>
+    <path d="M148 186v140"/>
+    <path d="M364 186v140"/>
+    <path d="M104 216v80"/>
+    <path d="M408 216v80"/>
+  </g>
+</svg>

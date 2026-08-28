@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>يلا رياضة</title>
+<meta name="description" content="تنسيق مواعيد الرياضة مع صديقك بدل رسائل الواتساب المتفرقة: اقترح أوقاتًا، شاركها برابط واحد، وكل طرف يحدّد ما يناسبه.">
+<meta name="theme-color" content="#f4f6f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#12160f" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="يلا رياضة">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="bar">
+  <button id="brand" class="brand" title="الصفحة الرئيسية">
+    <svg viewBox="0 0 24 24" aria-hidden="true" class="brand-ico"><path d="M4 9v6M20 9v6M7 6v12M17 6v12M7 12h10"/></svg>
+    <span>يلا رياضة</span>
+  </button>
+
+  <div class="bar-end">
+    <button id="install" class="btn btn-icon" title="تثبيت كتطبيق" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M8 11l4 4 4-4M4 20h16"/></svg>
+    </button>
+    <button id="help-btn" class="btn btn-icon" title="كيف يعمل؟">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.5 2.5 0 1 1 3.2 2.4c-.6.2-.7.7-.7 1.4"/><circle cx="12" cy="16.6" r="1"/></svg>
+    </button>
+    <button id="settings-btn" class="btn btn-icon" title="الإعدادات">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.4M12 18.8v2.4M4.5 4.5l1.7 1.7M17.8 17.8l1.7 1.7M2.8 12h2.4M18.8 12h2.4M4.5 19.5l1.7-1.7M17.8 6.2l1.7-1.7"/></svg>
+    </button>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ==================== الرئيسية ==================== -->
+  <section id="view-home" class="view">
+    <div id="next-wrap"></div>
+
+    <div class="stats" id="stats"></div>
+
+    <button id="new-btn" class="btn btn-primary btn-big">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      <span>اقتراح موعد جديد</span>
+    </button>
+
+    <div id="plan-groups"></div>
+
+    <p class="empty" id="home-empty" hidden>
+      لا توجد خطط بعد.<br>
+      اقترح موعدًا، ثم أرسل الرابط لصديقك في الواتساب — وسيحدّد الأوقات التي تناسبه.
+    </p>
+  </section>
+
+  <!-- ==================== إنشاء / تعديل ==================== -->
+  <section id="view-edit" class="view" hidden>
+    <h1 id="edit-title" class="h1">اقتراح موعد جديد</h1>
+
+    <form id="edit-form" autocomplete="off">
+      <label class="field">
+        <span class="label">النشاط</span>
+        <input id="f-act" type="text" maxlength="60" placeholder="جري، نادي، كرة قدم…" required>
+      </label>
+      <div class="chips" id="act-chips" role="group" aria-label="أنشطة سريعة"></div>
+
+      <label class="field">
+        <span class="label">المكان</span>
+        <input id="f-plc" type="text" maxlength="80" placeholder="الكورنيش، نادي الحي…" list="places">
+        <datalist id="places"></datalist>
+      </label>
+
+      <div class="row">
+        <label class="field">
+          <span class="label">المدة</span>
+          <select id="f-dur">
+            <option value="30">٣٠ دقيقة</option>
+            <option value="45">٤٥ دقيقة</option>
+            <option value="60" selected>ساعة</option>
+            <option value="90">ساعة ونصف</option>
+            <option value="120">ساعتان</option>
+          </select>
+        </label>
+        <label class="field grow">
+          <span class="label">ملاحظة <span class="fine">(اختياري)</span></span>
+          <input id="f-nte" type="text" maxlength="120" placeholder="أحضر الكرة…">
+        </label>
+      </div>
+
+      <fieldset class="field slots-field">
+        <legend class="label">الأوقات المقترحة <span class="fine">اقترح أكثر من وقت ليختار صديقك</span></legend>
+
+        <div class="picker">
+          <div class="chips days" id="day-chips" role="group" aria-label="اليوم"></div>
+          <div class="chips times" id="time-chips" role="group" aria-label="الساعة"></div>
+          <div class="custom">
+            <input id="f-custom" type="datetime-local">
+            <button type="button" id="add-custom" class="btn">إضافة</button>
+          </div>
+        </div>
+
+        <ul class="slot-list" id="slot-list"></ul>
+        <p class="fine" id="slot-hint">اختر يومًا ثم ساعة لإضافة وقت.</p>
+      </fieldset>
+
+      <div class="actions">
+        <button type="submit" class="btn btn-primary btn-big" id="save-btn">حفظ ومشاركة</button>
+        <button type="button" class="btn" id="cancel-edit">إلغاء</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ==================== عرض خطة ==================== -->
+  <section id="view-plan" class="view" hidden></section>
+
+</main>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<!-- ==================== الحوارات ==================== -->
+
+<dialog id="dlg-name">
+  <form method="dialog">
+    <h2>ما اسمك؟</h2>
+    <p class="fine">يظهر لصديقك بجانب الأوقات التي اخترتها. يُحفظ على هذا الجهاز فقط.</p>
+    <input id="name-input" type="text" maxlength="40" placeholder="اسمك" required>
+    <div class="dlg-actions"><button class="btn btn-primary" value="ok">تم</button></div>
+  </form>
+</dialog>
+
+<dialog id="dlg-settings">
+  <form method="dialog">
+    <h2>الإعدادات</h2>
+    <label class="field">
+      <span class="label">اسمي</span>
+      <input id="set-name" type="text" maxlength="40" placeholder="اسمك">
+    </label>
+    <label class="field">
+      <span class="label">رقم صديقك في الواتساب <span class="fine">(اختياري)</span></span>
+      <input id="set-phone" type="tel" inputmode="tel" maxlength="20" placeholder="‎+970599123456">
+      <span class="fine">إن أضفته، يفتح زر الواتساب محادثته مباشرة بدل قائمة جهات الاتصال.</span>
+    </label>
+    <div class="dlg-actions">
+      <button class="btn btn-primary" value="save">حفظ</button>
+      <button class="btn" value="cancel" formnovalidate>إلغاء</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlg-help">
+  <h2>كيف يعمل؟</h2>
+  <ol class="help">
+    <li><b>اقترح</b> نشاطًا ومكانًا وعدة أوقات تناسبك.</li>
+    <li><b>أرسل الرابط</b> لصديقك في الواتساب بضغطة واحدة.</li>
+    <li><b>يفتح صديقك الرابط</b> ويضغط على الأوقات المناسبة له — ثم يعيد إرسال الرابط إليك.</li>
+    <li><b>الوقت الذي يناسب الجميع</b> يظهر مميّزًا؛ أكّده وأضفه إلى تقويم الهاتف لينبّهكما قبل الموعد.</li>
+    <li>بعد التمرين اضغط <b>تم</b> — ليُحسب ضمن سلسلة أسابيعك.</li>
+  </ol>
+  <p class="fine">
+    لا يوجد خادم ولا حساب: تفاصيل الخطة مضمّنة داخل الرابط نفسه، وتُحفظ نسخة على جهازك.
+    لذلك التحديث لا يصل تلقائيًا — بعد أي تغيير أعد إرسال الرابط.
+  </p>
+  <form method="dialog"><div class="dlg-actions"><button class="btn btn-primary">فهمت</button></div></form>
+</dialog>
+
+<dialog id="dlg-confirm">
+  <h2 id="cf-title">تأكيد</h2>
+  <p id="cf-text" class="cf-text"></p>
+  <form method="dialog">
+    <div class="dlg-actions">
+      <button class="btn btn-danger" value="yes" id="cf-yes">نعم</button>
+      <button class="btn" value="no">تراجع</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="store.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
